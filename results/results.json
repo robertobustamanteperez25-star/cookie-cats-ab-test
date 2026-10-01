@@ -1,0 +1,82 @@
+{
+  "n_users": 90189,
+  "srm": {
+    "n_control": 44700,
+    "n_treatment": 45489,
+    "share_treatment": 0.5043741476233243,
+    "chi2": 6.9024049496058275,
+    "p_value": 0.008607987810836262
+  },
+  "tests": {
+    "retention_1": {
+      "rate_control": 0.4481879194630872,
+      "rate_treatment": 0.44228274967574577,
+      "abs_diff": -0.005905169787341458,
+      "rel_diff": -0.01317565585974659,
+      "z": -1.7840862247974725,
+      "p_value": 0.07440965529691913,
+      "ci_low": -0.012392439449445217,
+      "ci_high": 0.0005820998747623016,
+      "bayes": {
+        "prob_treatment_better": 0.037675,
+        "expected_loss_ship_treatment": 0.005947149832365816,
+        "expected_loss_ship_control": 5.0220314724325415e-05,
+        "lift_ci_low": -0.01238096249300106,
+        "lift_ci_high": 0.0006017529260549458
+      }
+    },
+    "retention_7": {
+      "rate_control": 0.19020134228187918,
+      "rate_treatment": 0.18200004396667327,
+      "abs_diff": -0.008201298315205913,
+      "rel_diff": -0.043119034896460164,
+      "z": -3.164358912748191,
+      "p_value": 0.001554249975614329,
+      "ci_low": -0.013281552418885545,
+      "ci_high": -0.0031210442115262808,
+      "bayes": {
+        "prob_treatment_better": 0.000755,
+        "expected_loss_ship_treatment": 0.0081947675283732,
+        "expected_loss_ship_control": 5.713495962760161e-07,
+        "lift_ci_low": -0.013276926370040876,
+        "lift_ci_high": -0.003088767747000856
+      }
+    }
+  },
+  "holm": {
+    "retention_7": {
+      "p_value": 0.001554249975614329,
+      "p_adjusted": 0.003108499951228658,
+      "significant": true
+    },
+    "retention_1": {
+      "p_value": 0.07440965529691913,
+      "p_adjusted": 0.07440965529691913,
+      "significant": false
+    }
+  },
+  "rounds": {
+    "diff": -0.09564444917356241,
+    "ci_low": -1.3051162471753321,
+    "ci_high": 1.2264280150516513,
+    "prob_negative": 0.5573333333333333,
+    "cap_p999": 1073.6240000000107,
+    "max_raw": 49854
+  },
+  "srm_worst_case_r7": {
+    "rate_control": 0.19020134228187918,
+    "rate_treatment": 0.18521252796420581,
+    "abs_diff": -0.004988814317673368,
+    "rel_diff": -0.026229122559397737,
+    "z": -1.9100272868381478,
+    "p_value": 0.056129700085283535,
+    "ci_low": -0.010107954210090041,
+    "ci_high": 0.00013032557474330648
+  },
+  "srm_excess_users": 789,
+  "excess_below_30_rounds": 832,
+  "design": {
+    "mde_r7_this_test": 0.007354622543033183,
+    "n_per_group_for_0_5pp": 95737
+  }
+}

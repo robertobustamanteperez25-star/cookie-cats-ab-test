@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Experiment Readout</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: a lab readout — verdict strip, then input panel beside live results, then the design calculator */
+:root {
+  --bg: #f3f5f8; --surface: #ffffff; --fg: #18202b; --muted: #5b6676; --line: #d9dee6;
+  --ctrl: #2563eb; --trt: #ea580c; --good: #15803d; --warn: #b45309; --bad: #b91c1c;
+  --display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --body: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0f141b; --surface: #171e28; --fg: #e6ebf2; --muted: #96a1b2; --line: #2a3442;
+  --ctrl: #6b9bff; --trt: #ff8a4c; --good: #4ade80; --warn: #fbbf24; --bad: #f87171; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #0f141b; --surface: #171e28; --fg: #e6ebf2; --muted: #96a1b2; --line: #2a3442;
+  --ctrl: #6b9bff; --trt: #ff8a4c; --good: #4ade80; --warn: #fbbf24; --bad: #f87171; color-scheme: dark }
+* { box-sizing: border-box }
+body { background: var(--bg); color: var(--fg); font: 16px/1.55 var(--body); margin: 0 }
+.wrap { max-width: 1040px; margin: 0 auto; padding-inline: 20px; padding-block: 32px 56px; display: grid; gap: 28px }
+h1, h2 { font-family: var(--display); text-wrap: balance; margin: 0; letter-spacing: -0.01em }
+h1 { font-size: clamp(1.9rem, 4.5vw, 2.8rem); font-weight: 800; line-height: 1.1 }
+h2 { font-size: 1.35rem; font-weight: 600 }
+.eyebrow { font: 600 .75rem/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--muted) }
+.lede { color: var(--muted); max-width: 64ch; margin: 10px 0 0 }
+.lede a, footer a { color: var(--ctrl) }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 22px }
+.grid { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 20px }
+@media (max-width: 760px) { .grid { grid-template-columns: 1fr } }
+.arms { display: grid; gap: 18px; margin-top: 14px }
+.arm { display: grid; grid-template-columns: 1fr 1fr; gap: 10px }
+.arm-name { grid-column: 1 / -1; font-weight: 600; display: flex; align-items: center; gap: 8px }
+.dot { width: 10px; height: 10px; border-radius: 50% }
+label { display: grid; gap: 4px; font-size: .82rem; color: var(--muted) }
+input, select { font: 600 1rem var(--mono); color: var(--fg); background: var(--bg); border: 1px solid var(--line);
+  border-radius: 6px; padding: 8px 10px; width: 100%; font-variant-numeric: tabular-nums }
+input:focus-visible, select:focus-visible, button:focus-visible { outline: 2px solid var(--ctrl); outline-offset: 2px }
+.presets { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px }
+button { font: 600 .85rem var(--body); color: var(--fg); background: transparent; border: 1px solid var(--line);
+  border-radius: 999px; padding: 6px 12px; cursor: pointer }
+button:hover { border-color: var(--ctrl); color: var(--ctrl) }
+.verdict { display: flex; flex-wrap: wrap; align-items: baseline; gap: 10px 16px }
+.big { font: 800 2.6rem/1 var(--display); font-variant-numeric: tabular-nums }
+.pill { font: 600 .78rem/1 var(--mono); padding: 6px 10px; border-radius: 999px; border: 1px solid currentColor; white-space: nowrap }
+.pill.good { color: var(--good) } .pill.warn { color: var(--warn) } .pill.bad { color: var(--bad) } .pill.neutral { color: var(--muted) }
+.stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-top: 18px }
+@media (max-width: 480px) { .stats { grid-template-columns: repeat(2, minmax(0, 1fr)) } }
+.stat dt { font-size: .8rem; color: var(--muted) }
+.stat dd { margin: 2px 0 0; font: 600 1.05rem var(--mono); font-variant-numeric: tabular-nums }
+dl { margin: 0 }
+svg text { fill: var(--muted); font: 12px var(--mono) }
+.ci-wrap { margin-top: 18px }
+.note { font-size: .9rem; color: var(--muted); margin: 12px 0 0 }
+.calc { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-top: 14px }
+@media (max-width: 640px) { .calc { grid-template-columns: repeat(2, minmax(0, 1fr)) } }
+.calc-out { margin-top: 16px; display: flex; flex-wrap: wrap; gap: 8px 28px; align-items: baseline }
+.calc-out .big { font-size: 2rem }
+.findings { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; margin-top: 14px }
+@media (max-width: 760px) { .findings { grid-template-columns: 1fr } }
+.findings h3 { font: 600 1rem var(--display); margin: 0 0 4px }
+.findings p { margin: 0; color: var(--muted); font-size: .95rem }
+footer { color: var(--muted); font-size: .9rem }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">A/B test readout · Cookie Cats · 90,189 players</div>
+    <h1>Moving the gate to level 40 cost 0.8 points of 7-day retention</h1>
+    <p class="lede">An interactive version of my analysis. It opens on the real experiment; change the numbers to read out any test with a yes/no metric.
+      Full analysis on <a href="https://github.com/robertobustamanteperez25-star/cookie-cats-ab-test">GitHub</a>.</p>
+  </header>
+
+  <section class="grid" aria-label="Significance calculator">
+    <form class="panel" id="inputs" autocomplete="off">
+      <h2>Experiment data</h2>
+      <div class="arms">
+        <div class="arm">
+          <div class="arm-name"><span class="dot" style="background:var(--ctrl)"></span>Control · gate at level 30</div>
+          <label for="nc">Players<input id="nc" type="number" min="1" value="44700"></label>
+          <label for="xc">Retained<input id="xc" type="number" min="0" value="8502"></label>
+        </div>
+        <div class="arm">
+          <div class="arm-name"><span class="dot" style="background:var(--trt)"></span>Treatment · gate at level 40</div>
+          <label for="nt">Players<input id="nt" type="number" min="1" value="45489"></label>
+          <label for="xt">Retained<input id="xt" type="number" min="0" value="8279"></label>
+        </div>
+      </div>
+      <div class="presets" role="group" aria-label="Load a metric">
+        <button type="button" data-p="44700,8502,45489,8279">7-day retention</button>
+        <button type="button" data-p="44700,20034,45489,20119">1-day retention</button>
+        <button type="button" data-p="44700,8502,44700,8279">SRM worst case</button>
+      </div>
+    </form>
+
+    <div class="panel" aria-live="polite">
+      <div class="eyebrow">Result</div>
+      <div class="verdict">
+        <span class="big" id="diff">–</span>
+        <span class="pill" id="sig">–</span>
+        <span class="pill" id="srm">–</span>
+      </div>
+      <div class="ci-wrap"><svg id="ci" viewBox="0 0 560 92" width="100%" role="img" aria-label="Confidence interval of the difference"></svg></div>
+      <dl class="stats">
+        <div class="stat"><dt>Control rate</dt><dd id="rc">–</dd></div>
+        <div class="stat"><dt>Treatment rate</dt><dd id="rt">–</dd></div>
+        <div class="stat"><dt>Relative change</dt><dd id="rel">–</dd></div>
+        <div class="stat"><dt>p-value (two-sided)</dt><dd id="pv">–</dd></div>
+        <div class="stat"><dt>P(treatment better)</dt><dd id="pb">–</dd></div>
+        <div class="stat"><dt>SRM p-value</dt><dd id="srmp">–</dd></div>
+      </dl>
+      <p class="note" id="explain"></p>
+    </div>
+  </section>
+
+  <section class="panel" aria-label="Sample size calculator">
+    <h2>How many players does the next test need?</h2>
+    <div class="calc">
+      <label for="base">Baseline rate (%)<input id="base" type="number" step="0.1" value="19.0"></label>
+      <label for="mde">Drop to detect (pp)<input id="mde" type="number" step="0.1" min="0.05" value="0.5"></label>
+      <label for="alpha">Significance (α)<select id="alpha"><option value="0.05" selected>0.05</option><option value="0.01">0.01</option><option value="0.1">0.10</option></select></label>
+      <label for="power">Power<select id="power"><option value="0.8" selected>80%</option><option value="0.9">90%</option></select></label>
+    </div>
+    <div class="calc-out">
+      <span><span class="big" id="nOut">–</span> players per group</span>
+      <span class="note" id="nNote" style="margin:0"></span>
+    </div>
+  </section>
+
+  <section class="panel" aria-label="Findings">
+    <h2>What the analysis found</h2>
+    <div class="findings">
+      <div><h3>Retention drops</h3><p>7-day retention fell from 19.0% to 18.2% (p = 0.002, still significant after Holm correction). The Bayesian probability that gate 40 is better is 0.08%.</p></div>
+      <div><h3>The split is off</h3><p>Gate 40 got 789 extra players (SRM, p = 0.009), almost all of them players who never reached level 30. In the worst case the drop shrinks to −0.5 pp (p = 0.056).</p></div>
+      <div><h3>Recommendation</h3><p>Keep the gate at level 30, fix the assignment bug, and if product still wants gate 40, run a confirmation test with about 96K players per group.</p></div>
+    </div>
+  </section>
+
+  <footer>Roberto Bustamante Pérez · Data Science student (UOC) ·
+    <a href="https://www.linkedin.com/in/roberto-bustamante-perez/">LinkedIn</a> ·
+    <a href="https://github.com/robertobustamanteperez25-star">GitHub</a></footer>
+</div>
+
+<script>
+// --- statistics helpers -------------------------------------------------------
+function erf(x) { // Abramowitz-Stegun 7.1.26
+  const s = Math.sign(x); x = Math.abs(x);
+  const t = 1 / (1 + 0.3275911 * x);
+  const y = 1 - (((((1.061405429 * t - 1.453152027) * t) + 1.421413741) * t - 0.284496736) * t + 0.254829592) * t * Math.exp(-x * x);
+  return s * y;
+}
+const cdf = z => 0.5 * (1 + erf(z / Math.SQRT2));
+function ppf(p) { // Acklam's inverse normal
+  const a = [-39.69683028665376, 220.9460984245205, -275.9285104469687, 138.357751867269, -30.66479806614716, 2.506628277459239];
+  const b = [-54.47609879822406, 161.5858368580409, -155.6989798598866, 66.80131188771972, -13.28068155288572];
+  const c = [-0.007784894002430293, -0.3223964580411365, -2.400758277161838, -2.549732539343734, 4.374664141464968, 2.938163982698783];
+  const d = [0.007784695709041462, 0.3224671290700398, 2.445134137142996, 3.754408661907416];
+  const pl = 0.02425;
+  if (p < pl) { const q = Math.sqrt(-2 * Math.log(p)); return (((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5]) / ((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1); }
+  if (p > 1 - pl) return -ppf(1 - p);
+  const q = p - 0.5, r = q * q;
+  return (((((a[0]*r+a[1])*r+a[2])*r+a[3])*r+a[4])*r+a[5])*q / (((((b[0]*r+b[1])*r+b[2])*r+b[3])*r+b[4])*r+1);
+}
+const $ = id => document.getElementById(id);
+const pct = (v, d = 2) => (v * 100).toFixed(d) + "%";
+const fmtP = p => p < 0.001 ? "< 0.001" : p.toFixed(3);
+
+function readout() {
+  const nc = +$("nc").value, xc = +$("xc").value, nt = +$("nt").value, xt = +$("xt").value;
+  if (!(nc > 0 && nt > 0 && xc >= 0 && xt >= 0 && xc <= nc && xt <= nt)) {
+    $("explain").textContent = "Retained players must be between 0 and the number of players in each group.";
+    return;
+  }
+  const pc = xc / nc, pt = xt / nt, diff = pt - pc;
+  const pool = (xc + xt) / (nc + nt);
+  const z = diff / Math.sqrt(pool * (1 - pool) * (1 / nc + 1 / nt));
+  const p = 2 * (1 - cdf(Math.abs(z)));
+  const se = Math.sqrt(pc * (1 - pc) / nc + pt * (1 - pt) / nt);
+  const lo = diff - 1.96 * se, hi = diff + 1.96 * se;
+  const pBetter = cdf(diff / se); // normal approximation of the Beta posteriors
+  const e = (nc + nt) / 2, chi = (nc - e) ** 2 / e + (nt - e) ** 2 / e;
+  const srmP = 2 * (1 - cdf(Math.sqrt(chi)));
+
+  $("diff").textContent = (diff >= 0 ? "+" : "−") + Math.abs(diff * 100).toFixed(2) + " pp";
+  $("diff").style.color = p < 0.05 ? (diff < 0 ? "var(--bad)" : "var(--good)") : "var(--fg)";
+  const sig = $("sig");
+  sig.textContent = p < 0.05 ? "significant at 5%" : "not significant";
+  sig.className = "pill " + (p < 0.05 ? (diff < 0 ? "bad" : "good") : "neutral");
+  const srm = $("srm");
+  srm.textContent = srmP < 0.01 ? "sample ratio mismatch" : "split looks fine";
+  srm.className = "pill " + (srmP < 0.01 ? "warn" : "good");
+  $("rc").textContent = pct(pc); $("rt").textContent = pct(pt);
+  $("rel").textContent = (diff >= 0 ? "+" : "") + (diff / pc * 100).toFixed(1) + "%";
+  $("pv").textContent = fmtP(p); $("pb").textContent = pct(pBetter, 2); $("srmp").textContent = fmtP(srmP);
+  $("explain").textContent =
+    `95% confidence interval: ${(lo * 100).toFixed(2)} to ${(hi * 100).toFixed(2)} pp. ` +
+    (srmP < 0.01 ? "The groups are not split 50/50 as planned, so check assignment and logging before trusting the result." :
+      p < 0.05 ? "The interval excludes zero." : "The interval includes zero, so the data cannot tell the variants apart.");
+  drawCI(diff, lo, hi);
+}
+
+function drawCI(diff, lo, hi) {
+  const W = 560, L = 30, R = 530;
+  const span = Math.max(Math.abs(lo), Math.abs(hi), 0.002) * 1.25;
+  const x = v => L + (v + span) / (2 * span) * (R - L);
+  const step = niceStep(span);
+  let ticks = "";
+  for (let v = -Math.floor(span / step) * step; v <= span + 1e-12; v += step) {
+    const lab = (v * 100).toFixed(step * 100 < 1 ? 1 : 0);
+    ticks += `<line x1="${x(v)}" x2="${x(v)}" y1="58" y2="63" stroke="var(--line)"/><text x="${x(v)}" y="80" text-anchor="middle">${lab}</text>`;
+  }
+  const col = lo > 0 ? "var(--good)" : hi < 0 ? "var(--bad)" : "var(--muted)";
+  $("ci").innerHTML =
+    `<line x1="${L}" x2="${R}" y1="58" y2="58" stroke="var(--line)"/>${ticks}` +
+    `<line x1="${x(0)}" x2="${x(0)}" y1="18" y2="58" stroke="var(--fg)" stroke-dasharray="3 3"/>` +
+    `<text x="${x(0)}" y="13" text-anchor="middle" style="fill:var(--fg)">0</text>` +
+    `<line x1="${x(lo)}" x2="${x(hi)}" y1="32" y2="32" stroke="${col}" stroke-width="4" stroke-linecap="round"/>` +
+    `<circle cx="${x(diff)}" cy="32" r="7" fill="${col}"/>` +
+    `<text x="${W - 30}" y="80" text-anchor="end" dx="30" style="font-size:11px">pp</text>`;
+}
+function niceStep(span) {
+  const raw = (2 * span) / 6, mag = Math.pow(10, Math.floor(Math.log10(raw)));
+  return [1, 2, 5, 10].map(m => m * mag).find(s => s >= raw);
+}
+
+function sampleSize() {
+  const p1 = +$("base").value / 100, m = +$("mde").value / 100;
+  const a = +$("alpha").value, pw = +$("power").value;
+  if (!(p1 > 0 && p1 < 1 && m > 0 && p1 - m > 0)) { $("nOut").textContent = "–"; $("nNote").textContent = "Use a baseline between 0 and 100% and a positive effect."; return; }
+  const p2 = p1 - m, pb = (p1 + p2) / 2, za = ppf(1 - a / 2), zb = ppf(pw);
+  const n = Math.ceil((za * Math.sqrt(2 * pb * (1 - pb)) + zb * Math.sqrt(p1 * (1 - p1) + p2 * (1 - p2))) ** 2 / m ** 2);
+  $("nOut").textContent = n.toLocaleString("en-US");
+  $("nNote").textContent = `${(2 * n).toLocaleString("en-US")} players in total. The Cookie Cats test had about 45,000 per group.`;
+}
+
+document.querySelectorAll("#inputs input").forEach(el => el.addEventListener("input", readout));
+document.querySelectorAll("[data-p]").forEach(b => b.addEventListener("click", () => {
+  const [a, b2, c, d] = b.dataset.p.split(","); $("nc").value = a; $("xc").value = b2; $("nt").value = c; $("xt").value = d; readout();
+}));
+["base", "mde", "alpha", "power"].forEach(id => $(id).addEventListener("input", sampleSize));
+$("inputs").addEventListener("submit", e => e.preventDefault());
+readout(); sampleSize();
+</script>
+</body>
+</html>
